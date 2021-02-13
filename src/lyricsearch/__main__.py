@@ -1,5 +1,8 @@
+from .controller import average_words
+
+
 def main():
-    print("this is working")
+    print(average_words(artist="Madonna"))
 
 
 if __name__ == "__main__":
