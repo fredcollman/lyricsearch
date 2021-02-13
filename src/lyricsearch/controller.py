@@ -1,6 +1,10 @@
 from .logging import get_logger
 
 
+def count_words(lyrics):
+    return len(lyrics.split(" "))
+
+
 def average_words(artist):
     logger = get_logger(__name__)
     logger.info(f"Beginning search for {artist}")
@@ -10,4 +14,5 @@ def average_words(artist):
     # -> ["Aerodynamic", "Around the World", ...]
     # GET https://api.lyrics.ovh/v1/Daft Punk/Around the World
     # -> "Around the world, around the world, ..."
-    return 3
+    lyrics = "Around the world, around the world"
+    return count_words(lyrics)
