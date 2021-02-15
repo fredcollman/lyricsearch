@@ -66,11 +66,12 @@ def average_words(artist, repository=None):
     logger = get_logger(__name__)
     logger.info(f"Beginning search for {artist}")
     words = 0
-    songs = 0
     if repository is None:
         repository = default_repository()
-    for song in repository.all_songs_by(artist):
+    songs = repository.all_songs_by(artist)
+    logger.info(f"Found {len(songs)} songs by {artist}")
+    for song in songs:
+        logger.info(f"Analysing {song}")
         lyrics = repository.find_lyrics(artist, song)
         words += count_words(lyrics)
-        songs += 1
-    return words / songs
+    return words / len(songs)
