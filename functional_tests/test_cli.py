@@ -13,3 +13,8 @@ class AverageWordsTest(TestCase):
         rap_words = average_words("Jay-Z")
         punk_words = average_words("Sex Pistols")
         assert float(rap_words) > float(punk_words)
+
+    def test_fails_gracefully_for_unrecognised_artist(self):
+        nonsense = "dikfhuadghuisadfiusdfikgskdiygvfdy"
+        with self.assertRaises(ValueError):
+            average_words(nonsense)

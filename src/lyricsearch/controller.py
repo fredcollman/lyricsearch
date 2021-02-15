@@ -9,16 +9,23 @@ def count_words(lyrics):
     return len(lyrics.split(" ")) if lyrics else 0
 
 
+class ArtistNotRecognised(ValueError):
+    pass
+
+
 def extract_artist_id(data):
-    return data["artists"][0]["id"]
+    try:
+        return data["artists"][0]["id"]
+    except (KeyError, IndexError):
+        raise ArtistNotRecognised()
 
 
 def extract_lyrics(data):
-    return data["lyrics"]
+    return data.get("lyrics") or ""
 
 
 def extract_titles(data):
-    return [work["title"] for work in data["works"]]
+    return [work["title"] for work in data.get("works") or []]
 
 
 class CachedFileRepository:
@@ -62,13 +69,7 @@ def average_words(artist, repository=None):
     songs = 0
     if repository is None:
         repository = default_repository()
-    # GET https://musicbrainz.org/ws/2/artist?query=Daft%20Punk&limit=1
-    # -> id="056e4f3e-d505-4dad-8ec1-d04f521cbb56"
-    # GET https://musicbrainz.org/ws/2/artist/056e4f3e-d505-4dad-8ec1-d04f521cbb56?inc=works
-    # -> ["Aerodynamic", "Around the World", ...]
     for song in repository.all_songs_by(artist):
-        # GET https://api.lyrics.ovh/v1/Daft Punk/Around the World
-        # -> "Around the world, around the world, ..."
         lyrics = repository.find_lyrics(artist, song)
         words += count_words(lyrics)
         songs += 1
