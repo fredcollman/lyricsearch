@@ -36,18 +36,18 @@ class CachedFileRepository:
 class WebRepository:
     def _artist_id(self, artist):
         url = f"https://musicbrainz.org/ws/2/artist?query={artist}&limit=1"
-        response = requests.get(url)
+        response = requests.get(url, headers={"accept": "application/json"})
         return extract_artist_id(response.json())
 
     def all_songs_by(self, artist):
         artist_id = self._artist_id(artist)
         url = f"https://musicbrainz.org/ws/2/artist/{artist_id}?inc=works"
-        response = requests.get(url)
+        response = requests.get(url, headers={"accept": "application/json"})
         return extract_titles(response.json())
 
     def find_lyrics(self, artist, song):
         url = f"https://api.lyrics.ovh/v1/{artist}/{song}"
-        response = requests.get(url)
+        response = requests.get(url, headers={"accept": "application/json"})
         return extract_lyrics(response.json())
 
 
