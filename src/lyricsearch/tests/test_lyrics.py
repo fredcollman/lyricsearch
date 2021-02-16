@@ -3,14 +3,7 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 import responses
-from lyricsearch.controller import (
-    WebRepository,
-    average_words,
-    count_words,
-    extract_artist_id,
-    extract_lyrics,
-    extract_titles,
-)
+from lyricsearch.controller import WebRepository, average_words
 
 
 class FakeRepository:
@@ -124,7 +117,7 @@ class WebRepositoryTest(TestCase):
         assert lyrics == ["A Natural Woman", "Respect", "I Say a Little Prayer"]
 
     @responses.activate
-    def test_finding_song_searches_for_correct_artist(self):
+    def test_finding_songs_searches_for_correct_artist(self):
         configure_aretha_songs()
         WebRepository().all_songs_by("Aretha Franklin")
         assert (
@@ -133,7 +126,7 @@ class WebRepositoryTest(TestCase):
         )
 
     @responses.activate
-    def test_finding_song_searches_for_correct_artist(self):
+    def test_finding_songs_uses_correct_artist_id(self):
         configure_aretha_songs()
         WebRepository().all_songs_by("Aretha Franklin")
         assert (
@@ -142,7 +135,7 @@ class WebRepositoryTest(TestCase):
         )
 
     @responses.activate
-    def test_finding_song_includes_correct_headers(self):
+    def test_finding_songs_includes_correct_headers(self):
         configure_aretha_songs()
         WebRepository().all_songs_by("Aretha Franklin")
         assert responses.calls[0].request.headers["Accept"] == "application/json"

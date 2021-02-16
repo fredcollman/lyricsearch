@@ -6,18 +6,6 @@ from .logging import get_logger
 from .transforms import count_words, extract_artist_id, extract_lyrics, extract_titles
 
 
-class CachedFileRepository:
-    def all_songs_by(self, artist):
-        with open("data/songs-daft_punk.json") as f:
-            data = json.load(f)
-            return extract_titles(data)
-
-    def find_lyrics(self, artist, song):
-        with open("data/lyrics-around_the_world.json") as f:
-            data = json.load(f)
-            return extract_lyrics(data)
-
-
 class WebRepository:
     def _artist_id(self, artist):
         url = f"https://musicbrainz.org/ws/2/artist?query={artist}&limit=1"
