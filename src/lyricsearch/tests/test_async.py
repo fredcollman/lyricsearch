@@ -153,6 +153,12 @@ def configure_aretha_songs(session):
     )
 
 
+GOOD_HEADERS = {
+    "accept": "application/json",
+    "user-agent": "lyricsearch/0.0.1 ( https://github.com/fredcollman/lyricsearch )",
+}
+
+
 class AsyncWebRepositoryTest(IsolatedAsyncioTestCase):
     def setUp(self):
         self.session = Mock(wraps=FakeSession())
@@ -168,7 +174,7 @@ class AsyncWebRepositoryTest(IsolatedAsyncioTestCase):
         await self.repo.find_lyrics("Black Sabbath", "War Pigs")
         self.session.get.assert_called_once_with(
             "https://api.lyrics.ovh/v1/Black Sabbath/War Pigs",
-            headers={"accept": "application/json"},
+            headers=GOOD_HEADERS,
         )
 
     async def test_escapes_special_characters_for_song_lookup(self):
@@ -177,7 +183,7 @@ class AsyncWebRepositoryTest(IsolatedAsyncioTestCase):
         await self.repo.find_lyrics("Linkin Park", "Numb/Encore")
         self.session.get.assert_called_once_with(
             "https://api.lyrics.ovh/v1/Linkin Park/Numb-Encore",
-            headers={"accept": "application/json"},
+            headers=GOOD_HEADERS,
         )
 
     async def test_can_find_all_songs_by_artist(self):
@@ -198,7 +204,7 @@ class AsyncWebRepositoryTest(IsolatedAsyncioTestCase):
             "https://musicbrainz.org/ws/2/artist?query=Aretha Franklin&limit=1",
         )
         assert call.kwargs == {
-            "headers": {"accept": "application/json"},
+            "headers": GOOD_HEADERS,
         }
 
     async def test_finding_songs_uses_correct_artist_id(self):
@@ -209,7 +215,7 @@ class AsyncWebRepositoryTest(IsolatedAsyncioTestCase):
             "https://musicbrainz.org/ws/2/work?artist=b5e66d98-985b-4258-8903-b8cd2144789a&offset=0",
         )
         assert call.kwargs == {
-            "headers": {"accept": "application/json"},
+            "headers": GOOD_HEADERS,
         }
 
     async def test_finds_multiple_pages_of_songs(self):
@@ -220,5 +226,5 @@ class AsyncWebRepositoryTest(IsolatedAsyncioTestCase):
             "https://musicbrainz.org/ws/2/work?artist=b5e66d98-985b-4258-8903-b8cd2144789a&offset=3",
         )
         assert call.kwargs == {
-            "headers": {"accept": "application/json"},
+            "headers": GOOD_HEADERS,
         }
