@@ -1,8 +1,10 @@
 import asyncio
+import os
 
 import aiohttp
 
-from .logging import get_logger
+from .log import get_logger
+from .plot import plot
 from .transforms import (
     count_words,
     extract_artist_id,
@@ -50,7 +52,7 @@ class AsyncWebRepository:
             titles = extract_titles(data)
             total = extract_count(data)
             offset += len(titles)
-            LOGGER.info(f"Queued {offset} songs by {artist} (total: {total}")
+            LOGGER.info(f"Queued {offset} songs by {artist} (total: {total})")
             for title in titles:
                 yield title
             done = offset >= extract_count(data)
@@ -61,13 +63,25 @@ class AsyncWebRepository:
         return extract_lyrics(data)
 
 
-def post_process(titles, all_lyrics):
-    words = [count_words(lyrics) for lyrics in all_lyrics]
-    LOGGER.info(f"{len(all_lyrics)} songs with a total of {sum(words)} words")
-    least = min(zip(words, titles))
-    most = max(zip(words, titles))
+def calculate_average(titles, word_counts):
+    LOGGER.info(f"Total of {sum(word_counts)} words across {len(word_counts)} songs")
+    least = min(zip(word_counts, titles))
+    most = max(zip(word_counts, titles))
     LOGGER.info(f"min: {least}, max: {most}")
-    return sum(words) / len(all_lyrics)
+    return sum(word_counts) / len(word_counts)
+
+
+def post_process(artist, titles, all_lyrics):
+    word_counts = [count_words(lyrics) for lyrics in all_lyrics]
+    average = calculate_average(titles, word_counts)
+    if os.environ.get("WITH_PLOT"):
+        path = plot(
+            artist=artist,
+            titles=titles,
+            word_counts=word_counts,
+        )
+        LOGGER.info("chart plotted at %s", path)
+    return average
 
 
 async def average_words_coro(artist, repository=None):
@@ -85,7 +99,7 @@ async def average_words_coro(artist, repository=None):
         titles.append(song)
         tasks.append(asyncio.create_task(repository.find_lyrics(artist, song)))
     all_lyrics = await asyncio.gather(*tasks)
-    return post_process(titles, all_lyrics)
+    return post_process(artist, titles, all_lyrics)
 
 
 def average_words(artist, repository=None):

@@ -2,7 +2,7 @@ import json
 
 import requests
 
-from .logging import get_logger
+from .log import get_logger
 from .transforms import count_words, extract_artist_id, extract_lyrics, extract_titles
 
 
