@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 USER_AGENT="lyricsearch/0.0.1 ( https://github.com/fredcollman/lyricsearch )"
 curl -H "user-agent: ${USER_AGENT}" -H "accept: application/json" "https://musicbrainz.org/ws/2/artist?query=Daft%20Punk&limit=1" > data/artist-daft_punk.json
-curl -H "user-agent: ${USER_AGENT}" -H "accept: application/json" "https://musicbrainz.org/ws/2/artist/056e4f3e-d505-4dad-8ec1-d04f521cbb56?inc=works" > data/songs-daft_punk.json
+curl -H "user-agent: ${USER_AGENT}" -H "accept: application/json" "https://musicbrainz.org/ws/2/work?artist=056e4f3e-d505-4dad-8ec1-d04f521cbb56" > data/songs-daft_punk.json
+curl -H "user-agent: ${USER_AGENT}" -H "accept: application/json" "https://musicbrainz.org/ws/2/work?artist=056e4f3e-d505-4dad-8ec1-d04f521cbb56&offset=25" > data/songs-daft_punk-p2.json
 curl "https://api.lyrics.ovh/v1/Daft%20Punk/Around%20the%20World" > data/lyrics-around_the_world.json

@@ -19,3 +19,7 @@ def extract_lyrics(data):
 
 def extract_titles(data):
     return [work["title"] for work in data.get("works") or []]
+
+
+def extract_count(data):
+    return data["work-count"]

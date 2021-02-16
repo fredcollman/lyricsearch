@@ -72,6 +72,8 @@ class AverageWordsTest(TestCase):
 
 
 class FakeResponse:
+    status = 200
+
     def __init__(self, payload):
         self._payload = payload
 
@@ -84,11 +86,17 @@ class FakeSession:
         self.responses = []
 
     async def get(self, url, headers):
-        for match, json in self.responses:
+        found = None
+        for index, (match, json) in enumerate(self.responses):
             if isinstance(match, str) and url.startswith(match):
-                return FakeResponse(json)
+                break
             elif isinstance(match, re.Pattern) and match.match(url):
-                return FakeResponse(json)
+                break
+        else:
+            raise AssertionError("no request matches", url)
+
+        _, json = self.responses.pop(index)
+        return FakeResponse(json)
 
     def add_response(self, url_pattern, json):
         self.responses.append([url_pattern, json])
@@ -106,12 +114,14 @@ FAKE_ARETHA_ID = "b5e66d98-985b-4258-8903-b8cd2144789a"
 
 def configure_aretha_songs(session):
     session.add_response(
-        "https://musicbrainz.org/ws/2/artist?query",
+        "https://musicbrainz.org/ws/2/artist",
         json={"artists": [{"id": FAKE_ARETHA_ID}]},
     )
     session.add_response(
-        re.compile("https://musicbrainz.org/ws/2/artist/.*"),
+        "https://musicbrainz.org/ws/2/work",
         json={
+            "work-count": 4,
+            "work-offset": 0,
             "works": [
                 {
                     "title": "A Natural Woman",
@@ -121,6 +131,19 @@ def configure_aretha_songs(session):
                 },
                 {
                     "title": "I Say a Little Prayer",
+                },
+            ],
+        },
+    )
+
+    session.add_response(
+        "https://musicbrainz.org/ws/2/work",
+        json={
+            "work-count": 4,
+            "work-offset": 3,
+            "works": [
+                {
+                    "title": "Chain of Fools",
                 },
             ],
         },
@@ -148,7 +171,12 @@ class AsyncWebRepositoryTest(IsolatedAsyncioTestCase):
     async def test_can_find_all_songs_by_artist(self):
         configure_aretha_songs(self.session)
         lyrics = [l async for l in self.repo.all_songs_by("Aretha Franklin")]
-        assert lyrics == ["A Natural Woman", "Respect", "I Say a Little Prayer"]
+        assert lyrics == [
+            "A Natural Woman",
+            "Respect",
+            "I Say a Little Prayer",
+            "Chain of Fools",
+        ]
 
     async def test_finding_songs_searches_for_correct_artist(self):
         configure_aretha_songs(self.session)
@@ -166,7 +194,18 @@ class AsyncWebRepositoryTest(IsolatedAsyncioTestCase):
         [l async for l in self.repo.all_songs_by("Aretha Franklin")]
         call = self.session.get.mock_calls[1]
         assert call.args == (
-            "https://musicbrainz.org/ws/2/artist/b5e66d98-985b-4258-8903-b8cd2144789a?inc=works",
+            "https://musicbrainz.org/ws/2/work?artist=b5e66d98-985b-4258-8903-b8cd2144789a&offset=0",
+        )
+        assert call.kwargs == {
+            "headers": {"accept": "application/json"},
+        }
+
+    async def test_finds_multiple_pages_of_songs(self):
+        configure_aretha_songs(self.session)
+        [l async for l in self.repo.all_songs_by("Aretha Franklin")]
+        call = self.session.get.mock_calls[2]
+        assert call.args == (
+            "https://musicbrainz.org/ws/2/work?artist=b5e66d98-985b-4258-8903-b8cd2144789a&offset=3",
         )
         assert call.kwargs == {
             "headers": {"accept": "application/json"},
