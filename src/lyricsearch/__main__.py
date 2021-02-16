@@ -1,5 +1,6 @@
 import argparse
-from .controller import average_words
+
+from .async_controller import average_words
 
 
 def parse_args():
