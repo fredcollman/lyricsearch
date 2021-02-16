@@ -14,14 +14,15 @@ class FakeRepository:
         return self._lyrics
 
     async def all_songs_by(self, artist):
-        return self._songs
+        for song in self._songs:
+            yield song
 
 
 class AverageWordsTest(TestCase):
     def test_counts_the_lyrics(self):
         repository = Mock(
             wraps=FakeRepository(
-                lyrics=("Living in a material world, I am a material girl.")
+                lyrics="Living in a material world, I am a material girl."
             )
         )
         assert average_words("Madonna", repository=repository) == 10
@@ -58,12 +59,10 @@ class AverageWordsTest(TestCase):
 
         class ExtendedFakeRepository:
             async def all_songs_by(self, artist):
-                return [
-                    "one",
-                    "two",
-                    "three",
-                    "four",
-                ]
+                yield "one"
+                yield "two"
+                yield "three"
+                yield "four"
 
             async def find_lyrics(self, song, artist):
                 return next(lyrics)
@@ -148,12 +147,12 @@ class AsyncWebRepositoryTest(IsolatedAsyncioTestCase):
 
     async def test_can_find_all_songs_by_artist(self):
         configure_aretha_songs(self.session)
-        lyrics = await self.repo.all_songs_by("Aretha Franklin")
+        lyrics = [l async for l in self.repo.all_songs_by("Aretha Franklin")]
         assert lyrics == ["A Natural Woman", "Respect", "I Say a Little Prayer"]
 
     async def test_finding_songs_searches_for_correct_artist(self):
         configure_aretha_songs(self.session)
-        await self.repo.all_songs_by("Aretha Franklin")
+        [l async for l in self.repo.all_songs_by("Aretha Franklin")]
         call = self.session.get.mock_calls[0]
         assert call.args == (
             "https://musicbrainz.org/ws/2/artist?query=Aretha Franklin&limit=1",
@@ -164,7 +163,7 @@ class AsyncWebRepositoryTest(IsolatedAsyncioTestCase):
 
     async def test_finding_songs_uses_correct_artist_id(self):
         configure_aretha_songs(self.session)
-        await self.repo.all_songs_by("Aretha Franklin")
+        [l async for l in self.repo.all_songs_by("Aretha Franklin")]
         call = self.session.get.mock_calls[1]
         assert call.args == (
             "https://musicbrainz.org/ws/2/artist/b5e66d98-985b-4258-8903-b8cd2144789a?inc=works",

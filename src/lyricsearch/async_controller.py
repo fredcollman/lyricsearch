@@ -5,6 +5,8 @@ import aiohttp
 from .logging import get_logger
 from .transforms import count_words, extract_artist_id, extract_lyrics, extract_titles
 
+LOGGER = get_logger(__name__)
+
 
 class AsyncWebRepository:
     def __init__(self, session):
@@ -23,7 +25,10 @@ class AsyncWebRepository:
         artist_id = await self._artist_id(artist)
         url = f"https://musicbrainz.org/ws/2/artist/{artist_id}?inc=works"
         data = await self._get_json(url)
-        return extract_titles(data)
+        titles = extract_titles(data)
+        LOGGER.info(f"Found {len(titles)} songs by {artist}")
+        for title in titles:
+            yield title
 
     async def find_lyrics(self, artist, song):
         url = f"https://api.lyrics.ovh/v1/{artist}/{song}"
@@ -37,16 +42,15 @@ async def average_words_coro(artist, repository=None):
             repository = AsyncWebRepository(session)
             return await average_words_coro(artist, repository)
 
-    logger = get_logger(__name__)
-    logger.info(f"Beginning search for {artist}")
-    words = 0
-    songs = await repository.all_songs_by(artist)
-    logger.info(f"Found {len(songs)} songs by {artist}")
-    for song in songs:
-        logger.info(f"Analysing {song}")
-        lyrics = await repository.find_lyrics(artist, song)
-        words += count_words(lyrics)
-    return words / len(songs)
+    LOGGER.info(f"Beginning search for {artist}")
+    songs = repository.all_songs_by(artist)
+    tasks = []
+    async for song in songs:
+        LOGGER.info(f"Analysing {song}")
+        tasks.append(asyncio.create_task(repository.find_lyrics(artist, song)))
+    all_lyrics = await asyncio.gather(*tasks)
+    words = sum(count_words(lyrics) for lyrics in all_lyrics)
+    return words / len(all_lyrics)
 
 
 def average_words(artist, repository=None):
