@@ -14,6 +14,10 @@ from .transforms import (
 LOGGER = get_logger(__name__)
 
 
+def url_escape(fragment):
+    return fragment.replace("/", "-")
+
+
 class AsyncWebRepository:
     def __init__(self, session):
         self._session = session
@@ -22,10 +26,11 @@ class AsyncWebRepository:
         LOGGER.debug(f"request: GET {url}")
         response = await self._session.get(url, headers={"accept": "application/json"})
         LOGGER.debug(f"response: GET {url}, status: {response.status}")
+        response.raise_for_status()
         return await response.json()
 
     async def _artist_id(self, artist):
-        url = f"https://musicbrainz.org/ws/2/artist?query={artist}&limit=1"
+        url = f"https://musicbrainz.org/ws/2/artist?query={url_escape(artist)}&limit=1"
         data = await self._get_json(url)
         return extract_artist_id(data)
 
@@ -39,14 +44,15 @@ class AsyncWebRepository:
             )
             data = await self._get_json(url)
             titles = extract_titles(data)
-            LOGGER.info(f"Found {len(titles)} songs by {artist}")
+            total = extract_count(data)
+            offset += len(titles)
+            LOGGER.info(f"Queued {offset} songs by {artist} (total: {total}")
             for title in titles:
                 yield title
-            offset += len(titles)
             done = offset >= extract_count(data)
 
     async def find_lyrics(self, artist, song):
-        url = f"https://api.lyrics.ovh/v1/{artist}/{song}"
+        url = f"https://api.lyrics.ovh/v1/{url_escape(artist)}/{url_escape(song)}"
         data = await self._get_json(url)
         return extract_lyrics(data)
 

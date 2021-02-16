@@ -3,6 +3,7 @@ from unittest import TestCase
 from lyricsearch.transforms import (
     count_words,
     extract_artist_id,
+    extract_count,
     extract_lyrics,
     extract_titles,
 )
@@ -124,3 +125,7 @@ class ExtractionTest(TestCase):
             "works": None,
         }
         assert extract_titles(payload) == []
+
+    def test_extracts_count_from_payload(self):
+        payload = {"work-count": 101, "work-offset": 25, "works": [{"title": "etc"}]}
+        assert extract_count(payload) == 101

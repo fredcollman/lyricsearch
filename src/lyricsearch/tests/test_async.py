@@ -80,6 +80,9 @@ class FakeResponse:
     async def json(self):
         return self._payload
 
+    def raise_for_status(self):
+        pass
+
 
 class FakeSession:
     def __init__(self):
@@ -165,6 +168,15 @@ class AsyncWebRepositoryTest(IsolatedAsyncioTestCase):
         await self.repo.find_lyrics("Black Sabbath", "War Pigs")
         self.session.get.assert_called_once_with(
             "https://api.lyrics.ovh/v1/Black Sabbath/War Pigs",
+            headers={"accept": "application/json"},
+        )
+
+    async def test_escapes_special_characters_for_song_lookup(self):
+        """TODO: what other special characters should be escaped, and how?"""
+        configure_war_pigs_lyrics(self.session)
+        await self.repo.find_lyrics("Linkin Park", "Numb/Encore")
+        self.session.get.assert_called_once_with(
+            "https://api.lyrics.ovh/v1/Linkin Park/Numb-Encore",
             headers={"accept": "application/json"},
         )
 
