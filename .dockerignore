@@ -1,0 +1,4 @@
+*.ipynb
+plots/
+.pytest_cache/
+.direnv/

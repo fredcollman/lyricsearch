@@ -9,7 +9,9 @@ def to_url(filename):
 
 
 def plot(*, artist, titles, word_counts):
-    filename = f"plots/{artist}-{datetime.datetime.now()}.html".replace(" ", "-")
+    filename = f"plots/{artist}-{datetime.datetime.now()}.html".replace(
+        " ", "-"
+    ).replace(":", "")
     output_file(filename)
     title = f"Words in {artist} songs"
     tooltips = [("title", "@label"), ("words", "@y")]
