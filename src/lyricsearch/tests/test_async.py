@@ -1,8 +1,75 @@
 import re
-from unittest import IsolatedAsyncioTestCase
+from unittest import IsolatedAsyncioTestCase, TestCase
 from unittest.mock import Mock
 
-from lyricsearch.async_controller import AsyncWebRepository
+from lyricsearch.async_controller import AsyncWebRepository, average_words
+
+
+class FakeRepository:
+    def __init__(self, lyrics=None, songs=None):
+        self._lyrics = lyrics or "These are some words"
+        self._songs = songs or ["This is a song"]
+
+    async def find_lyrics(self, artist, song):
+        return self._lyrics
+
+    async def all_songs_by(self, artist):
+        return self._songs
+
+
+class AverageWordsTest(TestCase):
+    def test_counts_the_lyrics(self):
+        repository = Mock(
+            wraps=FakeRepository(
+                lyrics=("Living in a material world, I am a material girl.")
+            )
+        )
+        assert average_words("Madonna", repository=repository) == 10
+
+    def test_fetches_lyrics_for_the_correct_song(self):
+        repository = Mock(wraps=FakeRepository(songs=["Eleanor Rigby"]))
+        average_words("The Beatles", repository=repository)
+        repository.find_lyrics.assert_called_once_with("The Beatles", "Eleanor Rigby")
+
+    def test_fetches_lyrics_for_multiple_songs(self):
+        repository = Mock(
+            wraps=FakeRepository(
+                songs=[
+                    "Brown Sugar",
+                    "Jumpin Jack Flash",
+                    "Gimme Shelter",
+                    "Sympathy for the Devil",
+                ]
+            )
+        )
+        average_words("The Rolling Stones", repository=repository)
+        assert repository.find_lyrics.call_count == 4
+
+    def test_returns_average_number_of_words(self):
+        lyrics = iter(
+            [
+                "one",
+                "two two",
+                "three three three",
+                "four four four four",
+                "five five five five five",
+            ]
+        )
+
+        class ExtendedFakeRepository:
+            async def all_songs_by(self, artist):
+                return [
+                    "one",
+                    "two",
+                    "three",
+                    "four",
+                ]
+
+            async def find_lyrics(self, song, artist):
+                return next(lyrics)
+
+        repository = Mock(wraps=ExtendedFakeRepository())
+        assert average_words("Example", repository=repository) == 2.5
 
 
 class FakeResponse:
