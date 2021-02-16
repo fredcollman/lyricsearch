@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+set -e
+
+echo "TEST 1: single-word artist"
+python -m lyricsearch chvrches
+echo "ok 1\n\n"
+echo "TEST 2: nonsense artist (should fail early)"
+! python -m lyricsearch dsigflahdufighsuadfghuashdcuoahdsuhdfsa
+echo "ok 2\n\n"
+echo "TEST 3: multi-word artist, including plot"
+WITH_PLOT=1 python -m lyricsearch "Lianne La Havas"
+echo "ok 3\n\n"

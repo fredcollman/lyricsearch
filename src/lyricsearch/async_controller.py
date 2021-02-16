@@ -15,7 +15,7 @@ from .transforms import (
 
 LOGGER = get_logger(__name__)
 
-USER_AGENT = "lyricsearch/0.0.1 ( https://github.com/fredcollman/lyricsearch )"
+USER_AGENT = "lyricsearch/1.0.1 ( https://github.com/fredcollman/lyricsearch )"
 
 
 def url_escape(fragment):
