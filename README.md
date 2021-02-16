@@ -56,6 +56,10 @@ It doesn't matter how readable your code is if poor UX drives users away.
 
 The original synchronous implementation has now been removed, but can be found in the git log.
 
+I haven't bothered with much error handling, as the simplest thing to do is to let exceptions bubble up.
+Since the script only really has two possible outcomes ("it worked" or "it didn't"), this seems good enough.
+The user gets reasonable feedback that something has gone wrong, and approximately what.
+
 I chucked a bokeh plot in there for a bit of fun at the end, since it's one of my favourite Python libs.
 It would also help drive further refinement, e.g. by observing that many songs have 0 words.
 Why is this? How could we detect instrumentals vs unrecognised songs? Is there a way to improve recognition? etc

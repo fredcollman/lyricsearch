@@ -63,7 +63,15 @@ class AsyncWebRepository:
         return extract_lyrics(data)
 
 
+class EmptySequenceHasNoAverage(RuntimeError):
+    pass
+
+
 def calculate_average(titles, word_counts):
+    if not titles:
+        raise EmptySequenceHasNoAverage(
+            "cannot calculate the average when there are no songs"
+        )
     LOGGER.info(f"Total of {sum(word_counts)} words across {len(word_counts)} songs")
     least = min(zip(word_counts, titles))
     most = max(zip(word_counts, titles))

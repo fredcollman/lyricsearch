@@ -7,8 +7,8 @@ from lyricsearch.async_controller import AsyncWebRepository, average_words
 
 class FakeRepository:
     def __init__(self, lyrics=None, songs=None):
-        self._lyrics = lyrics or "These are some words"
-        self._songs = songs or ["This is a song"]
+        self._lyrics = "These are some words" if lyrics is None else lyrics
+        self._songs = ["This is a song"] if songs is None else songs
 
     async def find_lyrics(self, artist, song):
         return self._lyrics
@@ -69,6 +69,11 @@ class AverageWordsTest(TestCase):
 
         repository = Mock(wraps=ExtendedFakeRepository())
         assert average_words("Example", repository=repository) == 2.5
+
+    def test_fails_if_there_are_no_songs(self):
+        repository = Mock(wraps=FakeRepository(songs=[]))
+        with self.assertRaises(RuntimeError):
+            average_words("this is not a real artist", repository=repository)
 
 
 class FakeResponse:
